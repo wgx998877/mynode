@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  table.table.table-striped.table-bordered
+    caption
+      h4 Registered Users
+    th 
+    th Name
+    th Email 
+    th Institute
+    th City
+    th Roll Number
+    th User Name
+    - for (var i = 0; i < users.length; i++)
+        tr
+            td #{i+1}
+            td #{users[i].name}
+            td #{users[i].email}
+            td #{users[i].institute}
+            td #{users[i].city}
+            td #{users[i].roll}
+            td #{users[i].username}

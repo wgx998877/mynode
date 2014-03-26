@@ -1,0 +1,287 @@
+var crypto = require ('crypto');
+var mongoose = require('mongoose');
+var fs = require('fs');
+
+var config = require('./config');
+var schema = require('./schema');
+var utils = require('./utils');
+
+var middleware = require('./middleware');
+var requireLogin = middleware.requireLogin;
+var requireNoLogin = middleware.requireNoLogin;
+
+module.exports = function (app){
+	app.get('/', function(req, res){
+		res.redirect('/home');
+	});
+	app.get('/home', function(req, res){
+		res.render('home');
+	});
+	app.get('/faq', function (req, res){
+		res.render('faq');
+	});
+	app.get('/problems', function (req,res){
+		var ProblemSchema = schema.ProblemSchema;
+		var Problem = mongoose.model('Problem',ProblemSchema);
+
+		//display problem sorted by name
+		Problem.find({}, null,{sort: {name: 1}}, function (err, problems){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				res.render('problems',{problems: problems});
+			}
+		});
+	});
+	app.get('/problems/*', function (req,res){
+		var ProblemSchema = schema.ProblemSchema;
+		var Problem = mongoose.model('Problem', ProblemSchema);
+		var prob = {};
+		prob.code = req.url.split('/problems/')[1];
+		Problem.findOne(prob, function(err,problem){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				if (!problem){
+					res.end("Problem does not exist.");
+					return ;
+				}
+				res.render('problem_page',{problem:problem, auto_grade: config.AUTO_GRADING,manual_grade: config.MANUAL_GRADING});
+			}
+		});
+		app.get('/submit', requireLogin,function(req,res){
+			var ProblemSchema = schema.ProblemSchema;
+			var Problem = mongoose.model('Problem', ProblemSchema);
+			Problem.find({}, null, {sort: {name: 1}}, function (err, problems){
+				if (err){
+					throw err;
+					console.log(err);
+				}
+				else {
+					res.render('submit', {problems: problems});
+				}
+			});
+		});
+	});
+	function invalid (lang){
+		for (var i = 0; i<config.languages.length;i++)
+		{
+			if (lang == config.languages[i])
+					return false;
+		}
+		return true;
+	}
+	app.post('/submit', requireLogin, function (req, res){
+		var ProblemSchema = schema.ProblemSchema;
+		var Problem = mongoose.model('Problem', ProblemSchema);
+		var form = req.body;
+		var prob = {};
+		prob.code = form.problem_code;
+		Problem.findOne(prob, function (err,problem){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				if (!problem){
+					res.end("Problem does not exist.");
+					return ;
+				}
+				if (invalid(form.language)){
+					res.end("Language does not exist.");
+					return ;
+				}
+				var SubmissionSchema = schema.SubmissionSchema;
+				var Submission = mongoose.model('Submission', SubmissionSchema);
+				var submission = new Submission();
+				submission.problem_code = form.problem_code;
+				submission.username = req.session.username;
+				submission.language = form.language;
+				submission.grading_type = problem.grading_type;
+				if (submission.grading_type == config.AUTO_GRADING){
+					submission.judge_statue = config.judge_statue.QUEUED;
+				}
+				else {
+					submission.judge_statue = config.judge_statuses.MANUAL_GRADING;
+				}
+				var filename = utils.generate_filename (form.language);
+				submission.filename = filename ;
+				submission.save (function (err){
+					if (err){
+						throw err;
+						console.log(err);
+					}
+					else {
+						console.log("Submission: " + submission.filename);
+						var basedir = dirname + '/uploads/submissions';
+						var data = fs.readFileSync(req.files["file"].path);
+						var newPath = basedir + '/' + filename ;
+						fs.writeFileSync(newPath , data);
+						res.redirect('/queue');
+					}
+				});
+			}
+		});
+	});
+	app.get('/queue', function (req,res){
+		res.redirect('/queue/1');
+	});
+	app.get('/queue/:page', function (req, res){
+		var num_subs_per_page = 11;
+		var page = parseInt(req.params['page']);
+		var SubmissionSchema = schema.SubmissionSchema;
+		var Submission = mongoose.model('Submission', SubmissionSchema);
+		Submission.find({},null, {sort: {submission_date: -1}},function (err,subs){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				lo = (page - 1)*num_subs_per_page;
+				hi = Math.min(subs.length, lo+ num_subs_per_page);
+				var length = hi - lo + 1 ;
+				var start = subs.length - lo;
+				var first = 1;
+				var last = Math.ceil(subs.length / num_subs_per_page);
+				var prev = Math.max(page - 1, first);
+				var next = Math.min(page + 1, last);
+
+				res.render('queue', {subs: subs.slice(lo,hi), start: start,first : first,last : last, prev:prev ,next:next});
+			}
+		});
+	});
+	app.get ('/standings', function (req,res){
+		var ScoreSchema = schema.ScoreSchema;
+		var Score = mongoose.model ('Score', ScoreSchema);
+		Score.find({}, null, {sort:{score:-1,username : 1}},function (err,scores){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				res.render('standings',{scores: scores});
+			}
+		});
+	});
+	app.get('/profile', requireLogin , function (req, res){
+		res.render('profile');
+	});
+	app.get('/submissions', requireLogin , function (req,res){
+		var SubmissionSchema = schema.SubmissionSchema;
+		var Submission = mongoose.model('Submission', SubmissionSchema);
+
+		query = {username: req.session.username};
+		Submission.find(query, null, {sort: {submission_date : -1}},function (err,subs){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			res.render('submissions',{subs:subs});
+		});
+	});
+	app.get('/users',function (req, res){
+		var UserSchema = schema.UserSchema;
+		var User = mongoose.model('User', UserSchema);
+		User.find({}, null, {sort: {name: 1}}, function (err,users){
+			if (err){
+				throw err;
+				console.log(err);
+			}
+			else {
+				res.render('users',{users:users});
+			}
+		});
+	});
+	app.get('/logout',function (req,res){
+		delete req.session.username;
+		delete req.session.is_admin;
+		res.redirect('/login');
+	});
+	app.get('/login',requireNoLogin , function (req,res){
+		res.render('login');
+	});
+	app.post('/login', requireNoLogin ,function (req,res){
+		var form = req.body;
+		var UserSchema = schema.UserSchema;
+		var User = mongoose.model('User',UserSchema);
+		var creds = {};
+
+		creds.username = form.username;
+		creds.password = crypto.createHash('sha256').update(config.salt + form.password).digest('hex');
+		User.findOne (creds, function (err,user){
+			if (err){
+				throw err;
+				console.log (err);
+			}
+			else {
+				if (user){
+					req.session.username = form.username;
+					res.redirect('/home');
+				}
+				else {
+					res.redirect ('/login?invalid=1');
+				}
+			}
+		});
+	});
+	app.get('/register',requireNoLogin , function(req,res){
+		res.render('register');
+	});
+	app.get('/register/success', requireNoLogin, function (req,res){
+		res.render('registersuccess',req.query)
+	});
+	app.post('/register',requireNoLogin,function (req,res){
+		var form = req.body;
+		if (req.body.passcode != config.passcode){
+			res.end("Incorrect passcode. Please Obtain the correct" + " passcode and try registering again.");
+		}
+		else {
+			var UserSchema = schema.UserSchema;
+			var User = mongoose.model('User', UserSchema);
+
+			var user = new User();
+			var creds = {};
+			creds.username = form.username;
+			console.log(creds);
+			User.findOne(creds, function (err,result){
+				if (err){
+					throw err;
+					console.log(err);
+				}
+				else {
+					if (result){
+						res.end("User name already exists in database, please choose a new one and try again.");
+					}
+					else {
+		                user.name = form.name;
+		                user.email = form.email;
+		                user.institute = form.institute;
+		                user.city = form.city;
+		                user.roll = form.roll;
+		                user.username = form.username;
+		                user.privilege_level = config.PRIVILEGE_USER;
+		                user.authcode = utils.generate_authcode();
+                		user.password = crypto.createHash('sha256').update(config.salt + form.pass1).digest('hex');
+						user.save(function (err){
+							if (err){
+								throw err; 
+								console.log(err);
+							}
+							else {
+								console.log("New user added.");
+							}
+						});
+						var params = '?';
+						params += 'username=' + user.username;
+						params += '&authcode=' + user.authcode;
+						res.redirect('/register/success'+params);
+					}
+				}
+			})
+		}
+	})
+};

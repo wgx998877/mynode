@@ -1,0 +1,57 @@
+extends layout
+
+block content
+    div.row
+        h3 #{problem.name}
+        hr
+    div.row
+        h5 Problem Statement:
+        p #{problem.description}
+        hr
+    div.row
+        h5 Grading Type: #{problem.grading_type}
+        hr
+    if problem.grading_type == auto_grade
+        #input_format.row
+            h5 Input Format
+            p #{problem.input_format}
+            hr
+        #output_format.row
+            h5 Output Format
+            p #{problem.output_format}
+            hr
+        #constraints.row
+            h5 Constraints
+            p #{problem.constraints}
+            hr
+        #sample_input.row
+            h5 Sample Input
+            p #{problem.sample_input}
+            hr
+        #sample_output.row
+            h5 Sample Output
+            p #{problem.sample_output}
+            hr
+        div.row
+            h5 Time Limit: #{problem.time_limit} second(s)
+            hr
+        div.row
+            h5 Number of Input Files: #{problem.num_input_files}
+            hr
+        div.row
+            h5 Weights of Input Files: #{problem.input_file_weights}
+            hr
+    
+    div.row
+        h5 Maximum possible points for this problem: #{problem.points}
+        hr
+
+    script.
+      window.onload = function() {
+        // Replace new lines with <br/> everywhere
+        $("#constraints p").html($("#constraints p")[0].innerHTML.replace(/\n/g, "<br />"))
+        $("#input_format p").html($("#input_format p")[0].innerHTML.replace(/\n/g, "<br />"))
+        $("#output_format p").html($("#output_format p")[0].innerHTML.replace(/\n/g, "<br />"))
+        $("#sample_input p").html($("#sample_input p")[0].innerHTML.replace(/\n/g, "<br />"))
+        $("#sample_output p").html($("#sample_output p")[0].innerHTML.replace(/\n/g, "<br />"))
+      }

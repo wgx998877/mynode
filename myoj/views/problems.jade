@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  table.table.table-striped.table-bordered
+    caption
+      h4 Problem List
+    th 
+    th Code
+    th Points
+    th Name
+    th Grading Type
+    - for (var i = 0; i < problems.length; i++)
+        tr
+            td #{i+1}
+            td #{problems[i].code}
+            td #{problems[i].points}
+            td 
+                a(href='/problems/#{problems[i].code}') #{problems[i].name}
+            td #{problems[i].grading_type}

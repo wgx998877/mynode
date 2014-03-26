@@ -1,0 +1,58 @@
+.container {
+    padding-top: 50px;
+}
+
+.small-button {
+    width: 100px;
+}
+
+form {
+    margin: 0 auto;
+    width: 600px;
+}
+
+.navbar .brand {
+    padding-left: 30px;
+}
+
+form#submit-form .control-group {
+    margin-bottom: 10px;
+}
+
+form#submit-form .btn {
+    margin-left: 220px;
+}
+
+form#reg-form .control-group {
+    margin-bottom: 10px;
+}
+
+form#reg-form .btn {
+    margin-left: 220px;
+}
+
+form#login-form .control-group {
+    margin-bottom: 10px;
+}
+
+form#login-form .btn {
+    margin-left: 220px;
+}
+
+form#problem-form .control-group {
+    margin-bottom: 10px;
+}
+
+form#problem-form .btn {
+    margin-left: 220px;
+}
+
+form#grade-form .control-group {
+    margin-bottom: 10px;
+}
+
+form#login-form #error-msg {
+    margin-left: 70px;
+    color: red;
+    display: none;
+}

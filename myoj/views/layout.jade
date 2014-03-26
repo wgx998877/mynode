@@ -1,0 +1,56 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content="width=device-width, initial-scale=1.0")
+    title Online Judge
+    link(rel='stylesheet', href='/stylesheets/bootstrap.min.css', media='screen')
+    link(rel='stylesheet', href='/stylesheets/custom.css')
+
+  body
+    div.navbar.navbar-inverse.navbar-fixed-top
+        div.navbar-inner
+            a.brand(href='/home') WGX Online Judge
+
+            ul.nav
+                li
+                    a(href='/home') Home
+                li
+                    a(href='/faq') FAQ
+                li
+                    a(href='/users') Registrants
+                li
+                    a(href='/problems') Problems
+                li
+                    if session.username
+                        a(href='/submit') Submit
+                li
+                    a(href='/queue') Queue
+                li
+                    a(href='/standings') Standings
+                li
+                    if !session.username
+                        a(href='/login') Login
+                li
+                    if !session.username
+                        a(href='/register') Register
+                li
+                    if session.username
+                        a(href='/submissions') My Submissions
+                li
+                    if session.username
+                        a(href='/profile') Profile
+                li
+                    if session.username
+                        a(href='/admin') Admin Panel
+                li
+                    if session.username
+                        a(href='/logout') Logout
+                    
+    div.container
+        block content
+
+    script(src='/javascripts/jquery.min.js')
+    script(src='/javascripts/bootstrap.min.js')
+    script(src='/javascripts/jqBootstrapValidation.js')
+    script(src='/javascripts/custom.js')

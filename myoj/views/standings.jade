@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  table.table.table-striped.table-bordered
+    caption
+      h4 Rank List
+    th Rank
+    th User
+    th Score
+    - for (var i = 0; i < scores.length; i++)
+        tr
+            td #{i+1}
+            td #{scores[i].username}
+            td #{scores[i].score}

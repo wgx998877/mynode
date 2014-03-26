@@ -1,0 +1,45 @@
+extends layout
+
+block content
+  div.row
+    div.span6
+      if (!graded)
+        h4 #{username} has not yet been graded for this problem.
+      else 
+        h4 #{username} has already been graded for this problem for a score of #{score}.
+    div.span6
+      form#grade-form.form-horizontal(method='post')
+        fieldset
+          legend Update grade
+          .control-group
+              label.control-label Grade
+              .controls
+                  select(name='points', id='points')
+                    - for (var i = 0; i <= points; i++)
+                        option #{i}
+
+        button.btn.btn-primary.offset2(type='submit') Submit
+
+      br
+      button.btn.btn-small(onclick='javascript:window.history.go(-1)') Go Back
+
+  if (num_subs == 0)
+      div.row
+        div.span6
+          h4 #{username} has not yet made any submissions for this problem.
+          hr
+  else
+      div.row
+        div.span12
+          h4 Number of submissions made: #{num_subs}
+          p Below are the submissions sorted by how recent they are.
+          hr
+
+      -   for (var i = 0; i < num_subs; i++)
+              div.row
+                div.span12
+                  h4 Submission Date: #{submission_date[i]}
+              div.row
+                div.span12
+                  textarea(rows="10")= files[i]
+                  hr
